@@ -1,4 +1,3 @@
-
 'use strict';
 
 //  
@@ -18,15 +17,15 @@
 //  Date: 2016-09-14
 //       Open the file path passed as constructor argument
 //
-//  
-//  WARN: The default buffer size is 1024, it is sufficient for many scenarios.  
-//         In old version, when a line is longer than the buffersize, the next()   
-//         would return undefined result.  
-//    
+//  Date: 2017-05-16
+//       The default buffer size is 1024, it is sufficient for many scenarios.
+//       In old version, when a line is longer than the buffersize, the next() would return undefined result.   
+//       Now, if the line length longer than the buffer size, this version would read next line, until reaching 
+//       "\n" character.  
+//
 const fs = require('fs');
 
-module.exports = function( path ) {
-     
+var LineReader = function( path ) {
     this._leftOver = '';
     this._EOF = false;
     this._filename;
@@ -34,8 +33,84 @@ module.exports = function( path ) {
     this._bufferSize = 1024;
     this._buffer = new Buffer(this._bufferSize);
 
-    this.open = function( thePath ) 
-    { 
+    if( undefined !== path )
+    {
+        try{
+            fs.statSync( path ).isFile() ; 
+            this.open( path );
+        } 
+        catch ( exception )
+        {  
+            console.log( path, 'is not a file.');
+            this._EOF = false;
+            return;
+        }
+    }
+}
+
+LineReader.prototype.close = function( ) 
+{ 
+    var self = this;
+    try{
+        fs.closeSync(self._fd); 
+    }
+    catch ( exception )
+    {
+        console.log( 'closing file failed.');
+    }
+    self._EOF = true;
+    self._fd = 0; 
+    return;
+}
+
+LineReader.prototype.next = function( ) 
+{ 
+        var self = this;
+
+        if(0 == self._fd)
+        {
+             return;
+        }
+
+	var _idxStart = 0;
+        var idx = 0; 
+	while(( self._leftOver.indexOf('\n', _idxStart)) == -1){
+            var read;
+            try{
+                read = fs.readSync( self._fd, self._buffer, 0, self._bufferSize, null)
+            } 
+            catch ( exception )
+            {
+                 console.log( 'reading file failed.');
+                 self.close(); 
+                 return;
+            }
+            if (read !== 0) {
+              self._leftOver  += self._buffer.toString('utf8', 0, read);
+            }else {
+                 try{
+                     fs.closeSync(self._fd);
+                  }
+                 catch ( exception )
+                 {
+                    console.log( 'closing file failed.');
+                 }
+                 self._EOF = true;
+                 self._fd = 0; 
+                 return;
+            }
+	}
+       if ((idx = self._leftOver.indexOf('\n', _idxStart)) !== -1) {
+            var line = self._leftOver.substring(_idxStart, idx);
+            _idxStart = idx + 1;
+            self._leftOver = self._leftOver.substring(_idxStart);
+            _idxStart = 0;
+            return line;
+        } 
+}
+
+LineReader.prototype.open =  function( thePath ) 
+{ 
         var self = this;
         self._filename = thePath;
 
@@ -55,86 +130,6 @@ module.exports = function( path ) {
         } 
         self._EOF = false;
         return;
-    }
-
-
-//    if( fs.statSync( path ).isFile() )   
-//    {
-//        this.open( path );
-//    }
-
-    try{
-            fs.statSync( path ).isFile() ; 
-            this.open( path );
-    } 
-    catch ( exception )
-    {  
-     }
-
-
-
-    this.close = function( ) 
-    { 
-         var self = this;
-         try{
-             fs.closeSync(self._fd); 
-         }
-         catch ( exception )
-         {
-              console.log( 'closing file failed.');
-         }
-         self._EOF = true;
-         self._fd = 0; 
-         return;
-    }
-
-    this.next = function( ) 
-    { 
-        var self = this;
-
-        if(0 == self._fd)
-        {
-             return;
-        }
-
-	var _idxStart = 0;
-        var idx; 
-        if ((idx = self._leftOver.indexOf("\n", _idxStart)) == -1) {  
-            var read;
-
-            try{
-                read = fs.readSync( self._fd, self._buffer, 0, self._bufferSize, null)
-            } 
-            catch ( exception )
-            {
-                 console.log( 'reading file failed.');
-                 self.close(); 
-                 return;
-            }
-
-            if (read !== 0) {
-              self._leftOver  += self._buffer.toString('utf8', 0, read);
-            } else {
-                 try{
-                     fs.closeSync(self._fd);
-                  }
-                 catch ( exception )
-                 {
-                    console.log( 'closing file failed.');
-                 }
-                 self._EOF = true;
-                 self._fd = 0; 
-                 return;
-            }
-         }
-      
-        if ((idx = self._leftOver.indexOf("\n", _idxStart)) !== -1) {
-            var line = self._leftOver.substring(_idxStart, idx);
-
-            _idxStart = idx + 1;
-            self._leftOver = self._leftOver.substring(_idxStart);
-   
-            return line;
-          } 
-     }
 }
+
+module.exports = LineReader;
