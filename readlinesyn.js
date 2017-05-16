@@ -18,7 +18,11 @@
 //  Date: 2016-09-14
 //       Open the file path passed as constructor argument
 //
-  
+//  
+//  WARN: The default buffer size is 1024, it is sufficient for many scenarios.  
+//         In old version, when a line is longer than the buffersize, the next()   
+//         would return undefined result.  
+//    
 const fs = require('fs');
 
 module.exports = function( path ) {
