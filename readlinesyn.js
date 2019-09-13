@@ -23,6 +23,8 @@
 //       Now, if the line length longer than the buffer size, this version would read next line, until reaching 
 //       "\n" character.  
 //
+//  Date: 2019-09-12
+//
 const fs = require('fs');
 
 var LineReader = function( path ) {
@@ -97,7 +99,7 @@ LineReader.prototype.next = function( )
                  }
                  self._EOF = true;
                  self._fd = 0; 
-                 return;
+                 return self._leftOver;
             }
 	}
        if ((idx = self._leftOver.indexOf('\n', _idxStart)) !== -1) {
