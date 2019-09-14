@@ -1,74 +1,100 @@
-'use strict';
-
+'use strict';  
+  
+//    
+//  Reading file line by line synochronicaly libraries    
+//    
+//  Author: Chunfeng Yang    
+//  All rights reserved.      
+//  This software is supplied "AS IS" without any warranties and support.     
+//  The author assumes no responsibility or liability for the use of the software,   
+//  conveys no license or title under any patent, copyright, or mask work right to the product.    
+//  The author reserves the right to make changes in the software without notification.    
+//   
 //  
-//  Reading file line by line synochronicaly libraries  
+//  Date: 2016-06-21  
+//       Remove a bug in open function  
 //  
-//  Author: Chunfeng Yang  
-//  All rights reserved.    
-//  This software is supplied "AS IS" without any warranties and support.   
-//  The author assumes no responsibility or liability for the use of the software, 
-//  conveys no license or title under any patent, copyright, or mask work right to the product.  
-//  The author reserves the right to make changes in the software without notification.  
+//  Date: 2016-09-14  
+//       Open the file path as constructor argument  
+//  
+//  Date: 2019-08-18  
+//       Adding isEOF() method 
 // 
-//
-//  Date: 2016-06-21
-//       Remove a bug in open function
-//
-//  Date: 2016-09-14
-//       Open the file path passed as constructor argument
-//
-//  Date: 2017-05-16
-//       The default buffer size is 1024, it is sufficient for many scenarios.
-//       In old version, when a line is longer than the buffersize, the next() would return undefined result.   
-//       Now, if the line length longer than the buffer size, this version would read next line, until reaching 
-//       "\n" character.  
-//
-//  Date: 2019-09-12
-//
-const fs = require('fs');
-
-var LineReader = function( path ) {
-    this._leftOver = '';
-    this._EOF = false;
-    this._filename;
-    this._fd = 0;
-    this._bufferSize = 1024;
-    this._buffer = new Buffer(this._bufferSize);
-
-    if( undefined !== path )
-    {
-        try{
-            fs.statSync( path ).isFile() ; 
-            this.open( path );
-        } 
-        catch ( exception )
-        {  
-            console.log( path, 'is not a file.');
-            this._EOF = false;
+//  Date: 2019-09-13  
+//       Remove a bug on end of file ==> return self._leftOver;  
+//   
+const fs = require('fs');  
+  
+module.exports = function( path ) {  
+       
+    this._leftOver = '';  
+    this._EOF = true;  
+    this._filename;  
+    this._fd = 0;  
+    this._bufferSize = 1024;  
+    this._position = null;
+    this._buffer = new Buffer(this._bufferSize);  
+  
+    this.open = function( thePath )   
+    {   
+        var self = this;  
+        if( !(thePath) )
+        {
+            console.log("open(): invalid file path.");
             return;
         }
-    }
-}
+        self._filename = thePath;  
+  
+        if(0 !== self._fd)  
+        {  
+             self.close();  
+        }  
+  
+        try{  
+            self._fd = fs.openSync( self._filename, 'r');   
+        }   
+        catch ( exception )  
+        {  
+            console.log( 'open(): ' + self._filename + ' not found.');  
+            self._EOF = true;  
+            return;  
+        }   
+        self._EOF = false;  
+        return;  
+    }  
+  
+   try{  
+      fs.statSync( path ).isFile() ;   
+      this.open( path );  
+    }   
+    catch ( exception )  
+    {    
+    }  
+  
+    this.close = function( )   
+    {   
+         var self = this;  
+         try{  
+             fs.closeSync(self._fd);   
+         }  
+         catch ( exception )  
+         {  
+              console.log( 'close(): closing file failed.');  
+         }  
+         self._EOF = true;  
+         self._fd = 0;   
+         return;  
+    }  
 
-LineReader.prototype.close = function( ) 
-{ 
-    var self = this;
-    try{
-        fs.closeSync(self._fd); 
-    }
-    catch ( exception )
+    this.isEOF = function()
     {
-        console.log( 'closing file failed.');
+        return this._EOF;
     }
-    self._EOF = true;
-    self._fd = 0; 
-    return;
-}
-
-LineReader.prototype.next = function( ) 
-{ 
-        var self = this;
- 
+  
+    this.next = function( )   
+    {   
+        var self = this;  
+  
         if(0 == self._fd)  
         {  
             console.log( 'next(): invalid file.');  
@@ -115,29 +141,6 @@ LineReader.prototype.next = function( )
                  return self._leftOver;  
             }  
          }  
-}
+     }  
+}  
 
-LineReader.prototype.open =  function( thePath ) 
-{ 
-        var self = this;
-        self._filename = thePath;
-
-        if(0 !== self._fd)
-        {
-             self.close();
-        }
-
-        try{
-            self._fd = fs.openSync( self._filename, 'r'); 
-        } 
-        catch ( exception )
-        {
-            console.log( 'open(): ' + self._filename + ' not found.');
-            self._EOF = true;
-            return;
-        } 
-        self._EOF = false;
-        return;
-}
-
-module.exports = LineReader;
