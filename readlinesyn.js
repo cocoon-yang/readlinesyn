@@ -17,40 +17,35 @@
 //  Date: 2016-09-14  
 //       Open the file path as constructor argument  
 //  
-//  Date: 2019-08-18  
-//       Adding isEOF() method 
-// 
-//  Date: 2019-09-13  
-//       Remove a bug on end of file ==> return self._leftOver;  
-//   
+//  Date: 2019-09-14  
+//       Remove a bug => "return self._leftOver;" 
+//    
 const fs = require('fs');  
   
 module.exports = function( path ) {  
        
-    this._leftOver = '';  
+    this._leftOver = "";  
     this._EOF = true;  
     this._filename;  
     this._fd = 0;  
     this._bufferSize = 1024;  
-    this._position = null;
-    this._buffer = new Buffer(this._bufferSize);  
+    this._buffer =  new Buffer(this._bufferSize);  
   
     this.open = function( thePath )   
     {   
         var self = this;  
-        if( !(thePath) )
-        {
-            console.log("open(): invalid file path.");
-            return;
-        }
-        self._filename = thePath;  
-  
-        if(0 !== self._fd)  
-        {  
-             self.close();  
-        }  
-  
+        self._EOF = true; 
+
+        self._leftOver = new String();  		
+		
+        self._filename = thePath;    
         try{  
+            if(0 !== self._fd)  
+            {  
+               self.close(); 
+               self._fd = 0;			   
+            }  		
+		
             self._fd = fs.openSync( self._filename, 'r');   
         }   
         catch ( exception )  
@@ -59,13 +54,17 @@ module.exports = function( path ) {
             self._EOF = true;  
             return;  
         }   
-        self._EOF = false;  
+		
+        self._EOF = false;  	
         return;  
     }  
   
    try{  
-      fs.statSync( path ).isFile() ;   
-      this.open( path );  
+       if( path != undefined )
+	   {
+          fs.statSync( path ).isFile() ;   
+          this.open( path );  
+	   }
     }   
     catch ( exception )  
     {    
@@ -79,14 +78,13 @@ module.exports = function( path ) {
          }  
          catch ( exception )  
          {  
-              console.log( 'close(): closing file failed.');  
+              console.log( 'closing file failed.');  
          }  
          self._EOF = true;  
          self._fd = 0;   
          return;  
     }  
-
-    this.isEOF = function()
+    this.EOF = function( )  
     {
         return this._EOF;
     }
@@ -97,50 +95,54 @@ module.exports = function( path ) {
   
         if(0 == self._fd)  
         {  
-            console.log( 'next(): invalid file.');  
+            console.log( 'Invalid file.'); 
+            self._EOF = true; 
              return;  
         }  
   
         var _idxStart = 0;  
-        var idx;   
+        var idx; 
+		
         if ((idx = self._leftOver.indexOf("\n", _idxStart)) !== -1) {  
+			
             var line = self._leftOver.substring(_idxStart, idx);  
-  
             _idxStart = idx + 1;  
             self._leftOver = self._leftOver.substring(_idxStart);  
-     
+		
             return line;  
-          }  
-
+          } 		
+		  		
+ 
+		
+		
+        //  		
         if ((idx = self._leftOver.indexOf("\n", _idxStart)) == -1) {    
             var read;  
-  
             try{  
-                read = fs.readSync( self._fd, self._buffer, 0, self._bufferSize, self._position); 
+                read = fs.readSync( self._fd, self._buffer, 0, self._bufferSize, null);
             }   
             catch ( exception )  
             {  
-                 console.log( 'next(): reading file failed.');  
+                 console.log( 'reading file failed.');  
                  self.close();   
                  return;  
             }  
-  
             if (read !== 0) {  
-              self._leftOver  += self._buffer.toString('utf8', 0, read); 
-              return self.next(); 
-            } else {  
+              self._leftOver  += self._buffer.toString('utf8', 0, read);  		
+              return self.next();			  
+            } else {  			
                  try{  
                      fs.closeSync(self._fd);  
                   }  
                  catch ( exception )  
                  {  
-                    console.log( 'next(): closing file failed.');  
+                    console.log( 'closing file failed.');  
                  }  
                  self._EOF = true;  
-                 self._fd = 0;   
-                 return self._leftOver;  
+                 self._fd = 0; 
+                 return self._leftOver; 
             }  
          }  
+		
      }  
 }  
-
