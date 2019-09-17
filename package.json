@@ -1,0 +1,19 @@
+{
+  "name": "readlinesyn",
+  "description": "Reading a file line by line, synchrony version", 
+  "author": {
+    "name": "Chunfeng Yang",
+    "email": "mistyang@126.com"
+  },   
+  "version": "1.0.0",  
+  "private": true, 
+  "main": "readlinesyn.js", 
+  "dependencies": {   
+  },
+  "methods":{
+    "open": "open( filePath )",
+    "close": "close()",
+    "next": "nest()",
+    "isEOF": "isEOF()"
+  }  
+}
