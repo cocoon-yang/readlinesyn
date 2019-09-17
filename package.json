@@ -1,5 +1,5 @@
 {
-  "name": "readlinesyn",
+  "name": "linebyline",
   "description": "Reading a file line by line, synchrony version", 
   "author": {
     "name": "Chunfeng Yang",
