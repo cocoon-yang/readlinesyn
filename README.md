@@ -1,6 +1,22 @@
 # linebyline
 A Node.js module for reading file line by line synochronicaly   
 
+
+# Methods
+  - open( filePath ) 
+  - close()
+  - next()
+  - isEOF()
+
+# Installation
+
+readlinesyn requires [Node.js](https://nodejs.org/) v4+ to run.
+
+```
+$ npm install readlinesyn
+```  
+
+
 ## Examples
 <pre>
 const LineByLine = require('./readlinesyn');   
