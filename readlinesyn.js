@@ -23,7 +23,7 @@
 const fs = require('fs');  
   
 module.exports = function( path ) {  
-       
+    this._encode = "utf8";   
     this._leftOver = "";  
     this._EOF = true;  
     this._filename;  
@@ -84,7 +84,7 @@ module.exports = function( path ) {
          self._fd = 0;   
          return;  
     }  
-    this.EOF = function( )  
+    this.isEOF = function( )  
     {
         return this._EOF;
     }
@@ -128,7 +128,7 @@ module.exports = function( path ) {
                  return;  
             }  
             if (read !== 0) {  
-              self._leftOver  += self._buffer.toString('utf8', 0, read);  		
+              self._leftOver  += self._buffer.toString(self._encode, 0, read);  		
               return self.next();			  
             } else {  			
                  try{  
