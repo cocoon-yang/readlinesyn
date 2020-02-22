@@ -1,4 +1,4 @@
-# linebyline
+# readlinesyn
 A Node.js module for reading file line by line synochronicaly   
 
 
@@ -22,6 +22,8 @@ $ npm install readlinesyn
 const LineByLine = require('./readlinesyn');   
   
 var filename = './result.txt';  
+// the default encode is 'utf8'
+// liner._encode = "utf8";
 var liner = new LineByLine();  
   
 liner.open( filename );   
